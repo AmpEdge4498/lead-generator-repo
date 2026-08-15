@@ -1,0 +1,28 @@
+{
+  "name": "lead-generator",
+  "version": "1.0.0",
+  "description": "Lead Generation System for Electrical Services & Products Company — AmpEdge",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "db:setup": "node server/database/setup.js"
+  },
+  "keywords": [
+    "lead-generation",
+    "electrical",
+    "google-maps",
+    "scraper"
+  ],
+  "author": "AmpEdge",
+  "license": "MIT",
+  "dependencies": {
+    "sql.js": "^1.11.0",
+    "cors": "^2.8.5",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-fetch": "^2.7.0",
+    "uuid": "^11.1.0"
+  }
+}

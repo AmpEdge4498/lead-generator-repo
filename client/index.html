@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AmpEdge Lead Generator — Intelligent lead generation system for electrical services and products company. Find new construction projects, electricians, and business contacts in Kolkata, Howrah, and West Bengal.">
+  <meta name="keywords" content="lead generation, electrical services, Kolkata, Howrah, West Bengal, electrician, construction">
+  <meta name="author" content="AmpEdge">
+  <title>AmpEdge Lead Generator — Electrical Services & Products</title>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <h1>AmpEdge</h1>
+          <p>Lead Generator</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+
+        <div class="nav-item active" data-page="dashboard" id="nav-dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </div>
+
+        <div class="nav-item" data-page="search" id="nav-search">
+          <span class="nav-icon">🔍</span>
+          <span>Search & Generate</span>
+        </div>
+
+        <div class="nav-item" data-page="leads" id="nav-leads">
+          <span class="nav-icon">📋</span>
+          <span>All Leads</span>
+          <span class="nav-badge" id="total-leads-badge">0</span>
+        </div>
+
+        <div class="nav-item" data-page="map" id="nav-map">
+          <span class="nav-icon">🗺️</span>
+          <span>Map View</span>
+        </div>
+
+        <div class="nav-section-label">Settings</div>
+
+        <div class="nav-item" data-page="sources" id="nav-sources">
+          <span class="nav-icon">⚙️</span>
+          <span>Data Sources</span>
+        </div>
+
+        <div class="nav-item" data-page="export" id="nav-export">
+          <span class="nav-icon">⬇️</span>
+          <span>Export Data</span>
+        </div>
+      </nav>
+
+      <div style="padding: 16px; border-top: 1px solid var(--border-glass);">
+        <div style="font-size: 0.7rem; color: var(--text-muted); text-align: center;">
+          AmpEdge © 2026<br>
+          Electrical Services & Products
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+          <h2 class="topbar-title" id="page-title">Dashboard</h2>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" onclick="loadDemoData()">
+            <span>🎯</span>
+            <span>Load Demo</span>
+          </button>
+          <button class="topbar-btn" onclick="openAddLeadModal()">
+            <span>➕</span>
+            <span>Add Lead</span>
+          </button>
+          <button class="topbar-btn primary" onclick="navigateTo('search')">
+            <span>🔍</span>
+            <span>New Search</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <!-- ==================== DASHBOARD PAGE ==================== -->
+        <section class="page-section active" id="page-dashboard">
+          <!-- Stats Cards -->
+          <div class="stats-grid" id="stats-grid">
+            <div class="stat-card" style="--card-accent: var(--accent-blue);">
+              <div class="stat-card-header">
+                <div class="stat-icon" style="background: var(--accent-blue-dim); color: var(--accent-blue);">📋</div>
+                <span class="stat-trend up" id="stat-trend-total">↑ New</span>
+              </div>
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-label">Total Leads</div>
+            </div>
+
+            <div class="stat-card" style="--card-accent: var(--accent-green);">
+              <div class="stat-card-header">
+                <div class="stat-icon" style="background: var(--accent-green-dim); color: var(--accent-green);">📅</div>
+              </div>
+              <div class="stat-value" id="stat-today">0</div>
+              <div class="stat-label">Today's Leads</div>
+            </div>
+
+            <div class="stat-card" style="--card-accent: var(--accent-purple);">
+              <div class="stat-card-header">
+                <div class="stat-icon" style="background: var(--accent-purple-dim); color: var(--accent-purple);">📆</div>
+              </div>
+              <div class="stat-value" id="stat-week">0</div>
+              <div class="stat-label">This Week</div>
+            </div>
+
+            <div class="stat-card" style="--card-accent: var(--accent-orange);">
+              <div class="stat-card-header">
+                <div class="stat-icon" style="background: var(--accent-orange-dim); color: var(--accent-orange);">🗂️</div>
+              </div>
+              <div class="stat-value" id="stat-sources">0</div>
+              <div class="stat-label">Active Sources</div>
+            </div>
+          </div>
+
+          <!-- Category Distribution -->
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">📊 Category Distribution</h3>
+            </div>
+            <div class="cat-dist-grid" id="category-distribution"></div>
+          </div>
+
+          <!-- Charts Row -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
+            <!-- Trend Chart -->
+            <div class="glass-card">
+              <div class="glass-card-header">
+                <h3 class="glass-card-title">📈 Lead Trend (30 Days)</h3>
+              </div>
+              <div class="chart-container" id="trend-chart" style="margin-bottom: 30px;">
+                <div class="empty-state" style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <div class="empty-state-icon">📊</div>
+                  <div class="empty-state-desc">No trend data yet. Start generating leads!</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Leads -->
+            <div class="glass-card">
+              <div class="glass-card-header">
+                <h3 class="glass-card-title">🕐 Recent Leads</h3>
+                <button class="btn btn-sm" onclick="navigateTo('leads')">View All</button>
+              </div>
+              <div id="recent-leads-list">
+                <div class="empty-state">
+                  <div class="empty-state-icon">📭</div>
+                  <div class="empty-state-desc">No leads yet. Click "Load Demo" or "New Search" to start!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== SEARCH PAGE ==================== -->
+        <section class="page-section" id="page-search">
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">🔍 Search Configuration</h3>
+            </div>
+
+            <div class="search-config-grid">
+              <div class="form-group">
+                <label class="form-label">Search Query *</label>
+                <input type="text" class="form-input" id="search-query" placeholder="e.g., new apartment Howrah, electrician Kolkata">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Category</label>
+                <select class="form-select" id="search-category">
+                  <option value="">All Categories</option>
+                  <option value="flat-apartment">🏢 New Flats / Apartments</option>
+                  <option value="housing">🏠 Housing Projects</option>
+                  <option value="industry">🏭 New Industries</option>
+                  <option value="office">🏪 New Offices</option>
+                  <option value="electrician-seeker">🔌 Electrician Seekers</option>
+                  <option value="electrical-company">🤝 Electrical Companies</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Location</label>
+                <input type="text" class="form-input" id="search-location" placeholder="Kolkata, Howrah, Hooghly..." value="Kolkata, Howrah, West Bengal">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Radius (km)</label>
+                <select class="form-select" id="search-radius">
+                  <option value="5000">5 km</option>
+                  <option value="10000">10 km</option>
+                  <option value="25000">25 km</option>
+                  <option value="50000" selected>50 km</option>
+                  <option value="100000">100 km</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Source Selection -->
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">📡 Data Sources</h3>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Select sources to search</span>
+            </div>
+            <div class="search-sources-grid" id="search-sources-grid"></div>
+          </div>
+
+          <!-- Quick Search Suggestions -->
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">💡 Quick Searches</h3>
+            </div>
+            <div class="category-chips" id="quick-searches">
+              <div class="category-chip" onclick="quickSearch('new apartment Howrah')">🏢 New Apartments Howrah</div>
+              <div class="category-chip" onclick="quickSearch('new flat Kolkata')">🏢 New Flats Kolkata</div>
+              <div class="category-chip" onclick="quickSearch('housing project Hooghly')">🏠 Housing Hooghly</div>
+              <div class="category-chip" onclick="quickSearch('factory industrial Dankuni')">🏭 Industry Dankuni</div>
+              <div class="category-chip" onclick="quickSearch('new office Salt Lake')">🏪 Office Salt Lake</div>
+              <div class="category-chip" onclick="quickSearch('electrician Howrah')">🔌 Electrician Howrah</div>
+              <div class="category-chip" onclick="quickSearch('electrician Kolkata')">🔌 Electrician Kolkata</div>
+              <div class="category-chip" onclick="quickSearch('electrical company Kolkata')">🤝 Electrical Co. Kolkata</div>
+              <div class="category-chip" onclick="quickSearch('switchgear dealer Howrah')">🤝 Switchgear Howrah</div>
+              <div class="category-chip" onclick="quickSearch('construction company West Bengal')">🏗️ Construction WB</div>
+              <div class="category-chip" onclick="quickSearch('new building Howrah')">🏗️ New Building Howrah</div>
+              <div class="category-chip" onclick="quickSearch('real estate project Kolkata')">🏠 Real Estate Kolkata</div>
+            </div>
+          </div>
+
+          <!-- Search Button -->
+          <div style="text-align: center; margin: var(--space-xl) 0;">
+            <button class="btn btn-primary btn-lg" id="start-search-btn" onclick="startSearch()">
+              🔍 Start Lead Search
+            </button>
+          </div>
+
+          <!-- Progress -->
+          <div class="progress-container" id="search-progress">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text">
+              <span id="progress-label">Searching...</span>
+              <span id="progress-percent">0%</span>
+            </div>
+          </div>
+
+          <!-- Search Results Summary -->
+          <div class="search-results-summary glass-card" id="search-results">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">✅ Search Results</h3>
+            </div>
+            <div id="search-results-body"></div>
+          </div>
+        </section>
+
+        <!-- ==================== LEADS TABLE PAGE ==================== -->
+        <section class="page-section" id="page-leads">
+          <!-- Filters -->
+          <div class="filter-bar">
+            <input type="text" class="form-input search-input" id="filter-search" placeholder="🔍 Search leads by name, phone, email, address...">
+            <select class="form-select" id="filter-category" onchange="loadLeads()">
+              <option value="">All Categories</option>
+              <option value="flat-apartment">🏢 Flats/Apartments</option>
+              <option value="housing">🏠 Housing</option>
+              <option value="industry">🏭 Industry</option>
+              <option value="office">🏪 Office</option>
+              <option value="electrician-seeker">🔌 Electrician Seekers</option>
+              <option value="electrical-company">🤝 Electrical Companies</option>
+            </select>
+            <select class="form-select" id="filter-source" onchange="loadLeads()">
+              <option value="">All Sources</option>
+              <option value="google-maps">🗺️ Google Maps</option>
+              <option value="bing-maps">🌐 Bing Maps</option>
+              <option value="google-search">🔍 Google Search</option>
+              <option value="justdial">📞 JustDial</option>
+              <option value="indiamart">🏭 IndiaMart</option>
+              <option value="wbrera">🏗️ WBRERA</option>
+              <option value="manual">✏️ Manual</option>
+            </select>
+            <select class="form-select" id="filter-status" onchange="loadLeads()">
+              <option value="">All Status</option>
+              <option value="new">🔵 New</option>
+              <option value="contacted">🟡 Contacted</option>
+              <option value="converted">🟢 Converted</option>
+              <option value="rejected">🔴 Rejected</option>
+            </select>
+            <button class="btn btn-sm" onclick="loadLeads()">🔄 Refresh</button>
+            <button class="btn btn-sm btn-success" onclick="exportLeads()">⬇️ Export CSV</button>
+          </div>
+
+          <!-- Table -->
+          <div class="glass-card" style="padding: 0; overflow: hidden;">
+            <div class="lead-table-container">
+              <table class="lead-table" id="leads-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40px;">
+                      <input type="checkbox" id="select-all-leads" onchange="toggleSelectAll()">
+                    </th>
+                    <th onclick="sortLeads('name')">Name ↕</th>
+                    <th onclick="sortLeads('phone')">Phone ↕</th>
+                    <th onclick="sortLeads('email')">Email ↕</th>
+                    <th onclick="sortLeads('address')">Address ↕</th>
+                    <th onclick="sortLeads('city')">City ↕</th>
+                    <th onclick="sortLeads('category')">Category ↕</th>
+                    <th onclick="sortLeads('source')">Source ↕</th>
+                    <th onclick="sortLeads('status')">Status ↕</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="leads-tbody">
+                  <tr>
+                    <td colspan="10">
+                      <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-title">No leads found</div>
+                        <div class="empty-state-desc">Load demo data or start a new search to generate leads.</div>
+                        <button class="btn btn-primary" onclick="loadDemoData()">🎯 Load Demo Data</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="pagination" id="leads-pagination"></div>
+        </section>
+
+        <!-- ==================== MAP PAGE ==================== -->
+        <section class="page-section" id="page-map">
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">🗺️ Lead Locations — Kolkata / Howrah / West Bengal</h3>
+              <div>
+                <select class="form-select" id="map-filter-category" onchange="updateMapMarkers()" style="width: auto; display: inline-block;">
+                  <option value="">All Categories</option>
+                  <option value="flat-apartment">🏢 Flats</option>
+                  <option value="housing">🏠 Housing</option>
+                  <option value="industry">🏭 Industry</option>
+                  <option value="office">🏪 Office</option>
+                  <option value="electrician-seeker">🔌 Electricians</option>
+                  <option value="electrical-company">🤝 Companies</option>
+                </select>
+              </div>
+            </div>
+            <div class="map-container" id="map-wrapper">
+              <div id="map" style="width: 100%; height: 100%; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+                <div class="empty-state">
+                  <div class="empty-state-icon">🗺️</div>
+                  <div class="empty-state-title">Map View</div>
+                  <div class="empty-state-desc">
+                    Add your Google Maps API key in the .env file to enable the interactive map.<br>
+                    Leads will be shown as markers on the map with detailed info windows.
+                  </div>
+                </div>
+              </div>
+              <div class="map-stats" id="map-stats">
+                <strong id="map-lead-count">0</strong> leads shown on map
+              </div>
+            </div>
+          </div>
+
+          <!-- Map Legend -->
+          <div class="glass-card" style="margin-top: var(--space-lg);">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">📍 Map Legend</h3>
+            </div>
+            <div class="category-chips">
+              <div class="category-chip" style="border-color: var(--cat-flat); color: var(--cat-flat);">🏢 Flats/Apartments</div>
+              <div class="category-chip" style="border-color: var(--cat-housing); color: var(--cat-housing);">🏠 Housing</div>
+              <div class="category-chip" style="border-color: var(--cat-industry); color: var(--cat-industry);">🏭 Industry</div>
+              <div class="category-chip" style="border-color: var(--cat-office); color: var(--cat-office);">🏪 Office</div>
+              <div class="category-chip" style="border-color: var(--cat-electrician); color: var(--cat-electrician);">🔌 Electricians</div>
+              <div class="category-chip" style="border-color: var(--cat-company); color: var(--cat-company);">🤝 Companies</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== SOURCES PAGE ==================== -->
+        <section class="page-section" id="page-sources">
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">⚙️ Data Source Management</h3>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Toggle sources on/off and manage API keys</span>
+            </div>
+            <div id="sources-list"></div>
+          </div>
+
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">🔑 API Configuration</h3>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Google Maps API Key</label>
+              <input type="password" class="form-input" id="config-google-key" placeholder="Enter Google Maps API key...">
+              <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+                Get key from <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a> → APIs & Services → Credentials
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bing Maps API Key</label>
+              <input type="password" class="form-input" id="config-bing-key" placeholder="Enter Bing Maps API key...">
+              <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+                Get key from <a href="https://www.bingmapsportal.com" target="_blank">Bing Maps Portal</a>
+              </div>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--accent-orange); margin-top: var(--space-md);">
+              ⚠️ API keys should be set in the server's .env file for security. This section is for reference only.
+            </p>
+          </div>
+
+          <!-- Search History -->
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">📜 Search History</h3>
+            </div>
+            <div id="search-history-list">
+              <div class="empty-state">
+                <div class="empty-state-icon">📜</div>
+                <div class="empty-state-desc">No search history yet.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== EXPORT PAGE ==================== -->
+        <section class="page-section" id="page-export">
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">⬇️ Export Leads Data</h3>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+              Download your leads as a CSV file. You can filter by category, source, status, or date range before exporting.
+            </p>
+
+            <div class="search-config-grid">
+              <div class="form-group">
+                <label class="form-label">Category Filter</label>
+                <select class="form-select" id="export-category">
+                  <option value="">All Categories</option>
+                  <option value="flat-apartment">🏢 Flats/Apartments</option>
+                  <option value="housing">🏠 Housing</option>
+                  <option value="industry">🏭 Industry</option>
+                  <option value="office">🏪 Office</option>
+                  <option value="electrician-seeker">🔌 Electrician Seekers</option>
+                  <option value="electrical-company">🤝 Electrical Companies</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Source Filter</label>
+                <select class="form-select" id="export-source">
+                  <option value="">All Sources</option>
+                  <option value="google-maps">🗺️ Google Maps</option>
+                  <option value="bing-maps">🌐 Bing Maps</option>
+                  <option value="google-search">🔍 Google Search</option>
+                  <option value="manual">✏️ Manual</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Status Filter</label>
+                <select class="form-select" id="export-status">
+                  <option value="">All Status</option>
+                  <option value="new">🔵 New</option>
+                  <option value="contacted">🟡 Contacted</option>
+                  <option value="converted">🟢 Converted</option>
+                  <option value="rejected">🔴 Rejected</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Search</label>
+                <input type="text" class="form-input" id="export-search" placeholder="Filter by keyword...">
+              </div>
+            </div>
+
+            <div style="text-align: center; margin-top: var(--space-xl);">
+              <button class="btn btn-success btn-lg" onclick="exportLeads()">
+                ⬇️ Download CSV Export
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== ADD LEAD MODAL ==================== -->
+  <div class="modal-overlay" id="add-lead-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ Add New Lead</h3>
+        <button class="modal-close" onclick="closeModal('add-lead-modal')">✕</button>
+      </div>
+
+      <form id="add-lead-form" onsubmit="submitNewLead(event)">
+        <div class="search-config-grid">
+          <div class="form-group">
+            <label class="form-label">Name / Company Name *</label>
+            <input type="text" class="form-input" id="new-lead-name" required placeholder="Enter name or company">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number *</label>
+            <input type="tel" class="form-input" id="new-lead-phone" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="new-lead-email" placeholder="email@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category *</label>
+            <select class="form-select" id="new-lead-category" required>
+              <option value="flat-apartment">🏢 Flat / Apartment</option>
+              <option value="housing">🏠 Housing Project</option>
+              <option value="industry">🏭 Industry</option>
+              <option value="office">🏪 Office</option>
+              <option value="electrician-seeker">🔌 Electrician Seeker</option>
+              <option value="electrical-company">🤝 Electrical Company</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Full Address</label>
+          <input type="text" class="form-input" id="new-lead-address" placeholder="Full address...">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-md);">
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" class="form-input" id="new-lead-city" placeholder="e.g., Howrah" value="Howrah">
+          </div>
+          <div class="form-group">
+            <label class="form-label">State</label>
+            <input type="text" class="form-input" id="new-lead-state" value="West Bengal">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pincode</label>
+            <input type="text" class="form-input" id="new-lead-pincode" placeholder="711101">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="new-lead-notes" placeholder="Additional notes..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeModal('add-lead-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">➕ Add Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== EDIT LEAD MODAL ==================== -->
+  <div class="modal-overlay" id="edit-lead-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">✏️ Edit Lead</h3>
+        <button class="modal-close" onclick="closeModal('edit-lead-modal')">✕</button>
+      </div>
+      <div id="edit-lead-form-container"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

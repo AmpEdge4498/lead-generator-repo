@@ -1,55 +1,90 @@
 /**
  * Data Enricher — Deduplicates, validates, and enriches lead data
+ *
+ * Provides Indian phone number validation, junk keyword filtering,
+ * category enrichment, and deduplication.
  */
 
+// Junk keywords to filter out non-construction / irrelevant retail & repair shops
+const JUNK_KEYWORDS = [
+  'electrician',
+  'repair',
+  'service center',
+  'mobile shop',
+  'general store',
+  'kirana',
+  'hardware store'
+];
+
 /**
- * Validate and clean phone number (Indian format)
+ * Validate and clean Indian phone numbers:
+ * - Must be 10 digits starting with 6-9, or starts with +91/91 followed by 10 digits
+ * - Strips non-digits and leading +91 / 91 / 0
+ * - Rejects if result is not 10 digits starting with 6-9
+ *
+ * @param {string|number} phone - Raw phone number string/number
+ * @returns {string} Cleaned 10-digit Indian phone number or empty string if invalid
  */
 function cleanPhone(phone) {
   if (!phone) return '';
 
-  // Remove all non-digit characters except +
-  let cleaned = phone.replace(/[^\d+]/g, '');
+  // Strip all non-digit characters
+  let digits = String(phone).replace(/\D/g, '');
 
-  // Handle +91 prefix
-  if (cleaned.startsWith('+91')) {
-    cleaned = cleaned.substring(3);
-  } else if (cleaned.startsWith('91') && cleaned.length === 12) {
-    cleaned = cleaned.substring(2);
-  } else if (cleaned.startsWith('0')) {
-    cleaned = cleaned.substring(1);
+  // Strip leading +91 / 91 if 12 digits total
+  if (digits.startsWith('91') && digits.length === 12) {
+    digits = digits.substring(2);
+  } else if (digits.startsWith('0') && digits.length === 11) {
+    // Strip leading trunk zero if 11 digits
+    digits = digits.substring(1);
   }
 
-  // Validate Indian phone number (10 digits starting with 6-9 for mobile)
-  if (cleaned.length === 10 && /^[6-9]/.test(cleaned)) {
-    return cleaned;
+  // Validate Indian mobile phone: exactly 10 digits starting with 6, 7, 8, or 9
+  if (digits.length === 10 && /^[6-9]/.test(digits)) {
+    return digits;
   }
 
-  // Could be a landline (shorter)
-  if (cleaned.length >= 7 && cleaned.length <= 11) {
-    return cleaned;
-  }
-
+  // Reject invalid phone numbers
   return '';
 }
 
 /**
- * Validate email
+ * Check if a lead matches junk keywords (case insensitive)
+ * @param {Object} lead - Lead object
+ * @returns {boolean} True if lead is considered junk
+ */
+function isJunkLead(lead) {
+  if (!lead) return true;
+  const name = String(lead.name || '').toLowerCase();
+  const company = String(lead.company_name || '').toLowerCase();
+
+  return JUNK_KEYWORDS.some(keyword => {
+    const lowerKeyword = keyword.toLowerCase();
+    return name.includes(lowerKeyword) || company.includes(lowerKeyword);
+  });
+}
+
+/**
+ * Validate email format
+ * @param {string} email
+ * @returns {string} Lowercase valid email or empty string
  */
 function cleanEmail(email) {
   if (!email) return '';
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return emailRegex.test(email) ? email.toLowerCase() : '';
+  return emailRegex.test(String(email).trim()) ? String(email).trim().toLowerCase() : '';
 }
 
 /**
  * Extract city from address string
+ * @param {string} address
+ * @returns {string} Extracted city or empty string
  */
 function extractCity(address) {
   if (!address) return '';
 
   const knownCities = [
-    'Kolkata', 'Howrah', 'Hooghly', 'Howrah', 'Salt Lake', 'New Town',
+    'Kolkata', 'Howrah', 'Hooghly', 'Salt Lake', 'New Town',
     'Dum Dum', 'Barrackpore', 'Serampore', 'Rishra', 'Uttarpara',
     'Bally', 'Liluah', 'Belur', 'Shibpur', 'Uluberia', 'Dankuni',
     'Chinsurah', 'Bandel', 'Kalyani', 'Barasat', 'Baruipur',
@@ -77,11 +112,14 @@ function extractCity(address) {
 }
 
 /**
- * Determine lead category from search query or business type
+ * Determine lead category from search query or business types
+ * @param {string} query
+ * @param {string[]} types
+ * @returns {string} Lead category
  */
 function categorizeFromQuery(query, types = []) {
-  const q = query.toLowerCase();
-  const t = types.map(s => s.toLowerCase()).join(' ');
+  const q = (query || '').toLowerCase();
+  const t = (Array.isArray(types) ? types : []).map(s => String(s).toLowerCase()).join(' ');
 
   if (/flat|apartment|residential\s*complex|housing\s*society/.test(q) || /apartment|residential/.test(t)) {
     return 'flat-apartment';
@@ -106,28 +144,34 @@ function categorizeFromQuery(query, types = []) {
 }
 
 /**
- * Deduplicate leads by phone number and name similarity
+ * Deduplicate leads by phone number within the batch (and by normalized name for leads without phone)
+ * @param {Array} leads
+ * @returns {Array} Deduplicated leads
  */
 function deduplicateLeads(leads) {
-  const seen = new Map();
+  if (!Array.isArray(leads)) return [];
+
+  const seenPhones = new Set();
+  const seenNames = new Set();
   const unique = [];
 
   for (const lead of leads) {
-    const phoneKey = lead.phone ? cleanPhone(lead.phone) : '';
+    const phoneKey = lead.phone ? lead.phone.trim() : '';
     const nameKey = lead.name ? lead.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 
-    // Check by phone first (most reliable)
-    if (phoneKey && seen.has(`phone:${phoneKey}`)) {
+    if (phoneKey) {
+      if (seenPhones.has(phoneKey)) {
+        continue;
+      }
+      seenPhones.add(phoneKey);
+    } else if (nameKey) {
+      if (seenNames.has(nameKey)) {
+        continue;
+      }
+      seenNames.add(nameKey);
+    } else {
       continue;
     }
-
-    // Check by exact name match
-    if (nameKey && seen.has(`name:${nameKey}`)) {
-      continue;
-    }
-
-    if (phoneKey) seen.set(`phone:${phoneKey}`, true);
-    if (nameKey) seen.set(`name:${nameKey}`, true);
 
     unique.push(lead);
   }
@@ -136,27 +180,55 @@ function deduplicateLeads(leads) {
 }
 
 /**
- * Enrich a lead with cleaned/validated data
+ * Enrich a single lead with cleaned/validated data
+ * @param {Object} lead
+ * @param {string} [category]
+ * @returns {Object} Enriched lead object
  */
 function enrichLead(lead, category) {
+  const cleanedPhone = cleanPhone(lead.phone || lead.mobile || lead.contact);
+  const cleanedEmail = cleanEmail(lead.email);
+  const city = lead.city || extractCity(lead.address) || 'Kolkata';
+
+  let assignedCategory = lead.category;
+  if (category && typeof category === 'string' && category.trim()) {
+    assignedCategory = category.trim();
+  } else if (!assignedCategory) {
+    assignedCategory = categorizeFromQuery(lead.name || '', lead.raw_data?.types || []);
+  }
+
   return {
     ...lead,
-    phone: cleanPhone(lead.phone),
-    email: cleanEmail(lead.email),
-    city: lead.city || extractCity(lead.address),
-    category: category || categorizeFromQuery(lead.name || '', lead.raw_data?.types || []),
+    phone: cleanedPhone,
+    email: cleanedEmail,
+    city,
+    category: assignedCategory || 'general',
+    source: lead.source || 'manual',
     state: lead.state || 'West Bengal'
   };
 }
 
 /**
- * Process and enrich an array of leads
+ * Process and enrich an array of leads:
+ * - Filters out junk retail / repair names
+ * - Validates Indian phone numbers
+ * - Applies category, default source ('manual'), default state ('West Bengal')
+ * - Deduplicates by phone number within the batch
+ *
+ * @param {Array} rawLeads - Raw scraped lead objects
+ * @param {string} [category] - Optional category override
+ * @returns {Array} Cleaned, enriched, and deduplicated lead objects
  */
-function processLeads(leads, category) {
-  // Enrich each lead
-  const enriched = leads.map(lead => enrichLead(lead, category));
+function processLeads(rawLeads, category) {
+  if (!Array.isArray(rawLeads)) return [];
 
-  // Deduplicate
+  // 1. Filter out junk entries
+  const filtered = rawLeads.filter(lead => !isJunkLead(lead));
+
+  // 2. Enrich each lead with cleaned data, default source, state, category
+  const enriched = filtered.map(lead => enrichLead(lead, category));
+
+  // 3. Deduplicate by phone number within the batch
   const unique = deduplicateLeads(enriched);
 
   return unique;
@@ -167,6 +239,7 @@ module.exports = {
   cleanEmail,
   extractCity,
   categorizeFromQuery,
+  isJunkLead,
   deduplicateLeads,
   enrichLead,
   processLeads

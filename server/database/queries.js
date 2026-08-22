@@ -53,10 +53,14 @@ function getAllLeads(filters = {}) {
     sql += ' AND city LIKE ?';
     params.push(`%${filters.city}%`);
   }
+  if (filters.project_stage) {
+    sql += ' AND project_stage = ?';
+    params.push(filters.project_stage);
+  }
   if (filters.search) {
-    sql += ' AND (name LIKE ? OR company_name LIKE ? OR phone LIKE ? OR email LIKE ? OR address LIKE ?)';
+    sql += ' AND (name LIKE ? OR company_name LIKE ? OR phone LIKE ? OR email LIKE ? OR address LIKE ? OR city LIKE ? OR notes LIKE ?)';
     const s = `%${filters.search}%`;
-    params.push(s, s, s, s, s);
+    params.push(s, s, s, s, s, s, s);
   }
   if (filters.dateFrom) {
     sql += ' AND created_at >= ?';
@@ -98,8 +102,8 @@ function createLead(data) {
   }
 
   db.run(`
-    INSERT INTO leads (id, name, company_name, phone, email, address, city, state, pincode, lat, lng, category, subcategory, source, source_url, status, rating, website, notes, raw_data)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO leads (id, name, company_name, phone, email, address, city, state, pincode, lat, lng, category, subcategory, project_stage, project_scale, source, source_url, status, rating, website, google_business_url, facebook_url, notes, raw_data)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     id,
     data.name || '',
@@ -112,13 +116,17 @@ function createLead(data) {
     data.pincode || '',
     data.lat || null,
     data.lng || null,
-    data.category || 'general',
+    data.category || 'flat-apartment',
     data.subcategory || '',
+    data.project_stage || '',
+    data.project_scale || '',
     data.source || 'manual',
     data.source_url || '',
     data.status || 'new',
     data.rating || null,
     data.website || '',
+    data.google_business_url || '',
+    data.facebook_url || '',
     data.notes || '',
     data.raw_data ? JSON.stringify(data.raw_data) : ''
   ]);
@@ -145,8 +153,8 @@ function createLeadsBulk(leadsArray) {
       }
 
       db.run(`
-        INSERT INTO leads (id, name, company_name, phone, email, address, city, state, pincode, lat, lng, category, subcategory, source, source_url, status, rating, website, notes, raw_data)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO leads (id, name, company_name, phone, email, address, city, state, pincode, lat, lng, category, subcategory, project_stage, project_scale, source, source_url, status, rating, website, google_business_url, facebook_url, notes, raw_data)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         uuidv4(),
         data.name || '',
@@ -159,13 +167,17 @@ function createLeadsBulk(leadsArray) {
         data.pincode || '',
         data.lat || null,
         data.lng || null,
-        data.category || 'general',
+        data.category || 'flat-apartment',
         data.subcategory || '',
+        data.project_stage || '',
+        data.project_scale || '',
         data.source || 'manual',
         data.source_url || '',
         data.status || 'new',
         data.rating || null,
         data.website || '',
+        data.google_business_url || '',
+        data.facebook_url || '',
         data.notes || '',
         data.raw_data ? JSON.stringify(data.raw_data) : ''
       ]);
@@ -194,8 +206,10 @@ function updateLead(id, data) {
   const fields = [];
   const params = [];
 
+  const allowedFields = ['name', 'company_name', 'phone', 'email', 'address', 'city', 'state', 'pincode', 'lat', 'lng', 'category', 'subcategory', 'project_stage', 'project_scale', 'status', 'rating', 'website', 'google_business_url', 'facebook_url', 'notes'];
+
   for (const [key, value] of Object.entries(data)) {
-    if (['name', 'company_name', 'phone', 'email', 'address', 'city', 'state', 'pincode', 'lat', 'lng', 'category', 'subcategory', 'status', 'rating', 'website', 'notes'].includes(key)) {
+    if (allowedFields.includes(key)) {
       fields.push(`${key} = ?`);
       params.push(value);
     }
@@ -241,6 +255,7 @@ function getLeadStats() {
   const bySource = queryAll('SELECT source, COUNT(*) as count FROM leads GROUP BY source');
   const byStatus = queryAll('SELECT status, COUNT(*) as count FROM leads GROUP BY status');
   const byCity = queryAll("SELECT city, COUNT(*) as count FROM leads WHERE city != '' GROUP BY city ORDER BY count DESC LIMIT 10");
+  const byStage = queryAll("SELECT project_stage, COUNT(*) as count FROM leads WHERE project_stage != '' GROUP BY project_stage");
   const recentLeads = queryAll('SELECT * FROM leads ORDER BY created_at DESC LIMIT 5');
   const todayCount = queryOne("SELECT COUNT(*) as count FROM leads WHERE date(created_at) = date('now')")?.count || 0;
   const weekCount = queryOne("SELECT COUNT(*) as count FROM leads WHERE created_at >= datetime('now', '-7 days')")?.count || 0;
@@ -262,6 +277,7 @@ function getLeadStats() {
     bySource,
     byStatus,
     byCity,
+    byStage,
     recentLeads,
     dailyTrend
   };

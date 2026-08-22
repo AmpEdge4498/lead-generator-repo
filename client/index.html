@@ -175,51 +175,91 @@
         <section class="page-section" id="page-search">
           <div class="glass-card">
             <div class="glass-card-header">
-              <h3 class="glass-card-title">🔍 Search Configuration</h3>
+              <h3 class="glass-card-title">🏗️ Construction Project Discovery Engine</h3>
             </div>
 
             <div class="search-config-grid">
               <div class="form-group">
-                <label class="form-label">Search Query *</label>
-                <input type="text" class="form-input" id="search-query" placeholder="e.g., new apartment Howrah, electrician Kolkata">
+                <label class="form-label">Search Keyword</label>
+                <input type="text" class="form-input" id="search-query" placeholder="e.g., apartment, factory, housing, builder...">
               </div>
 
               <div class="form-group">
-                <label class="form-label">Category</label>
+                <label class="form-label">Project Category</label>
                 <select class="form-select" id="search-category">
-                  <option value="">All Categories</option>
-                  <option value="flat-apartment">🏢 New Flats / Apartments</option>
-                  <option value="housing">🏠 Housing Projects</option>
-                  <option value="industry">🏭 New Industries</option>
-                  <option value="office">🏪 New Offices</option>
-                  <option value="electrician-seeker">🔌 Electrician Seekers</option>
-                  <option value="electrical-company">🤝 Electrical Companies</option>
+                  <option value="">All Construction Types</option>
+                  <option value="flat-apartment">🏢 Under-Construction Flats & High-Rises</option>
+                  <option value="housing">🏠 Housing Townships & Gated Communities</option>
+                  <option value="industry">🏭 New Factories & Industrial Plants</option>
+                  <option value="office">🏪 Commercial Buildings & IT Parks</option>
+                  <option value="developer-builder">👷 Real Estate Developers & Promoters</option>
+                  <option value="individual-house">🏡 Bungalows & Private Houses</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label class="form-label">Location</label>
-                <input type="text" class="form-input" id="search-location" placeholder="Kolkata, Howrah, Hooghly..." value="Kolkata, Howrah, West Bengal">
+                <label class="form-label">📍 Micro-Location / Village / City</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" class="form-input" id="search-location" placeholder="Sankrail, Andul, Domjur, Mourigram..." value="Sankrail, Howrah, West Bengal" style="flex: 1;">
+                  <button class="btn" onclick="useCurrentGpsLocation()" title="Use GPS" style="padding: 8px 12px; background: rgba(0, 212, 255, 0.15); border: 1px solid var(--accent-blue); color: var(--accent-blue); font-size: 1.1rem; min-width: 42px;">
+                    📍
+                  </button>
+                </div>
               </div>
 
               <div class="form-group">
-                <label class="form-label">Radius (km)</label>
+                <label class="form-label">Search Radius</label>
                 <select class="form-select" id="search-radius">
-                  <option value="5000">5 km</option>
-                  <option value="10000">10 km</option>
-                  <option value="25000">25 km</option>
-                  <option value="50000" selected>50 km</option>
-                  <option value="100000">100 km</option>
+                  <option value="2000">2 km (Village)</option>
+                  <option value="5000" selected>5 km (Locality)</option>
+                  <option value="10000">10 km (Town)</option>
+                  <option value="25000">25 km (District)</option>
+                  <option value="50000">50 km (Region)</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          <!-- Micro-Locality Quick Chips -->
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <h3 class="glass-card-title">📍 Quick Micro-Locality Selector (Howrah & Nearby)</h3>
+            </div>
+            <div class="category-chips" style="gap: 8px;">
+              <div class="category-chip" onclick="selectDistrict('Sankrail, Howrah')" style="background:rgba(79,70,229,0.15);border-color:#4F46E5;">📍 Sankrail</div>
+              <div class="category-chip" onclick="selectDistrict('Andul, Howrah')" style="background:rgba(79,70,229,0.15);border-color:#4F46E5;">📍 Andul</div>
+              <div class="category-chip" onclick="selectDistrict('Mourigram, Howrah')" style="background:rgba(79,70,229,0.15);border-color:#4F46E5;">📍 Mourigram</div>
+              <div class="category-chip" onclick="selectDistrict('Domjur, Howrah')" style="background:rgba(5,150,105,0.15);border-color:#059669;">📍 Domjur</div>
+              <div class="category-chip" onclick="selectDistrict('Panchla, Howrah')" style="background:rgba(5,150,105,0.15);border-color:#059669;">📍 Panchla</div>
+              <div class="category-chip" onclick="selectDistrict('Bagnan, Howrah')" style="background:rgba(5,150,105,0.15);border-color:#059669;">📍 Bagnan</div>
+              <div class="category-chip" onclick="selectDistrict('Salap, Howrah')" style="background:rgba(217,119,6,0.15);border-color:#D97706;">📍 Salap</div>
+              <div class="category-chip" onclick="selectDistrict('Shibpur, Howrah')" style="background:rgba(217,119,6,0.15);border-color:#D97706;">📍 Shibpur</div>
+              <div class="category-chip" onclick="selectDistrict('Uluberia, Howrah')" style="background:rgba(217,119,6,0.15);border-color:#D97706;">📍 Uluberia</div>
+              <div class="category-chip" onclick="selectDistrict('Liluah, Howrah')">📍 Liluah</div>
+              <div class="category-chip" onclick="selectDistrict('Belur, Howrah')">📍 Belur</div>
+              <div class="category-chip" onclick="selectDistrict('Bally, Howrah')">📍 Bally</div>
+              <div class="category-chip" onclick="selectDistrict('Santragachi, Howrah')">📍 Santragachi</div>
+              <div class="category-chip" onclick="selectDistrict('Amta, Howrah')">📍 Amta</div>
+              <div class="category-chip" onclick="selectDistrict('Dankuni, Hooghly')" style="background:rgba(124,58,237,0.15);border-color:#7C3AED;">📍 Dankuni</div>
+              <div class="category-chip" onclick="selectDistrict('Uttarpara, Hooghly')" style="background:rgba(124,58,237,0.15);border-color:#7C3AED;">📍 Uttarpara</div>
+              <div class="category-chip" onclick="selectDistrict('Rishra, Hooghly')" style="background:rgba(124,58,237,0.15);border-color:#7C3AED;">📍 Rishra</div>
+              <div class="category-chip" onclick="selectDistrict('New Town, Kolkata')" style="background:rgba(220,38,38,0.15);border-color:#DC2626;">📍 New Town</div>
+              <div class="category-chip" onclick="selectDistrict('Rajarhat, Kolkata')" style="background:rgba(220,38,38,0.15);border-color:#DC2626;">📍 Rajarhat</div>
+              <div class="category-chip" onclick="selectDistrict('Salt Lake, Kolkata')" style="background:rgba(220,38,38,0.15);border-color:#DC2626;">📍 Salt Lake</div>
+              <div class="category-chip" onclick="selectDistrict('Joka, Kolkata')">📍 Joka</div>
+              <div class="category-chip" onclick="selectDistrict('Garia, Kolkata')">📍 Garia</div>
+              <div class="category-chip" onclick="selectDistrict('Barasat')">📍 Barasat</div>
+              <div class="category-chip" onclick="selectDistrict('Durgapur')" style="background:rgba(8,145,178,0.15);border-color:#0891B2;">🏭 Durgapur</div>
+              <div class="category-chip" onclick="selectDistrict('Haldia')" style="background:rgba(8,145,178,0.15);border-color:#0891B2;">🏭 Haldia</div>
+              <div class="category-chip" onclick="selectDistrict('Siliguri')" style="background:rgba(8,145,178,0.15);border-color:#0891B2;">🏭 Siliguri</div>
             </div>
           </div>
 
           <!-- Source Selection -->
           <div class="glass-card">
             <div class="glass-card-header">
-              <h3 class="glass-card-title">📡 Data Sources</h3>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">Select sources to search</span>
+              <h3 class="glass-card-title">📡 Data Sources (Multi-Engine)</h3>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">All sources work without API keys</span>
             </div>
             <div class="search-sources-grid" id="search-sources-grid"></div>
           </div>
@@ -227,28 +267,27 @@
           <!-- Quick Search Suggestions -->
           <div class="glass-card">
             <div class="glass-card-header">
-              <h3 class="glass-card-title">💡 Quick Searches</h3>
+              <h3 class="glass-card-title">⚡ Quick Project Discovery</h3>
             </div>
             <div class="category-chips" id="quick-searches">
-              <div class="category-chip" onclick="quickSearch('new apartment Howrah')">🏢 New Apartments Howrah</div>
-              <div class="category-chip" onclick="quickSearch('new flat Kolkata')">🏢 New Flats Kolkata</div>
-              <div class="category-chip" onclick="quickSearch('housing project Hooghly')">🏠 Housing Hooghly</div>
-              <div class="category-chip" onclick="quickSearch('factory industrial Dankuni')">🏭 Industry Dankuni</div>
-              <div class="category-chip" onclick="quickSearch('new office Salt Lake')">🏪 Office Salt Lake</div>
-              <div class="category-chip" onclick="quickSearch('electrician Howrah')">🔌 Electrician Howrah</div>
-              <div class="category-chip" onclick="quickSearch('electrician Kolkata')">🔌 Electrician Kolkata</div>
-              <div class="category-chip" onclick="quickSearch('electrical company Kolkata')">🤝 Electrical Co. Kolkata</div>
-              <div class="category-chip" onclick="quickSearch('switchgear dealer Howrah')">🤝 Switchgear Howrah</div>
-              <div class="category-chip" onclick="quickSearch('construction company West Bengal')">🏗️ Construction WB</div>
-              <div class="category-chip" onclick="quickSearch('new building Howrah')">🏗️ New Building Howrah</div>
-              <div class="category-chip" onclick="quickSearch('real estate project Kolkata')">🏠 Real Estate Kolkata</div>
+              <div class="category-chip" onclick="quickSearch('new apartment construction')">🏢 New Apartments</div>
+              <div class="category-chip" onclick="quickSearch('housing township')">🏠 Housing Townships</div>
+              <div class="category-chip" onclick="quickSearch('factory industrial plant')">🏭 New Factories</div>
+              <div class="category-chip" onclick="quickSearch('commercial office building')">🏪 Office & Commercial</div>
+              <div class="category-chip" onclick="quickSearch('developer builder promoter')">👷 Developers</div>
+              <div class="category-chip" onclick="quickSearch('bungalow private house')">🏡 Bungalows</div>
+              <div class="category-chip" onclick="quickSearch('HT substation transformer')">⚡ HT/LT Projects</div>
+              <div class="category-chip" onclick="quickSearch('new building under construction')">🏗️ All Construction</div>
             </div>
           </div>
 
           <!-- Search Button -->
-          <div style="text-align: center; margin: var(--space-xl) 0;">
-            <button class="btn btn-primary btn-lg" id="start-search-btn" onclick="startSearch()">
-              🔍 Start Lead Search
+          <div style="text-align: center; margin: var(--space-xl) 0; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-lg" id="start-search-btn" onclick="startSearch()" style="font-size: 1rem; padding: 14px 32px;">
+              ⚡ Start Live Lead Extraction
+            </button>
+            <button class="btn btn-lg" onclick="openLiveGoogleMapsSearch()" style="padding: 14px 24px; background: rgba(66, 133, 244, 0.15); border: 1px solid #4285F4; color: #4285F4;">
+              🗺️ Open Google Maps Live
             </button>
           </div>
 
@@ -258,7 +297,7 @@
               <div class="progress-bar-fill" id="progress-fill"></div>
             </div>
             <div class="progress-text">
-              <span id="progress-label">Searching...</span>
+              <span id="progress-label">Scanning construction sites...</span>
               <span id="progress-percent">0%</span>
             </div>
           </div>
@@ -266,7 +305,7 @@
           <!-- Search Results Summary -->
           <div class="search-results-summary glass-card" id="search-results">
             <div class="glass-card-header">
-              <h3 class="glass-card-title">✅ Search Results</h3>
+              <h3 class="glass-card-title">✅ Discovery Results</h3>
             </div>
             <div id="search-results-body"></div>
           </div>
@@ -279,21 +318,21 @@
             <input type="text" class="form-input search-input" id="filter-search" placeholder="🔍 Search leads by name, phone, email, address...">
             <select class="form-select" id="filter-category" onchange="loadLeads()">
               <option value="">All Categories</option>
-              <option value="flat-apartment">🏢 Flats/Apartments</option>
-              <option value="housing">🏠 Housing</option>
-              <option value="industry">🏭 Industry</option>
-              <option value="office">🏪 Office</option>
-              <option value="electrician-seeker">🔌 Electrician Seekers</option>
-              <option value="electrical-company">🤝 Electrical Companies</option>
+              <option value="flat-apartment">🏢 Flats & High-Rises</option>
+              <option value="housing">🏠 Housing Townships</option>
+              <option value="industry">🏭 Factories & Plants</option>
+              <option value="office">🏪 Commercial / IT</option>
+              <option value="developer-builder">👷 Developers</option>
+              <option value="individual-house">🏡 Bungalows</option>
             </select>
             <select class="form-select" id="filter-source" onchange="loadLeads()">
               <option value="">All Sources</option>
-              <option value="google-maps">🗺️ Google Maps</option>
-              <option value="bing-maps">🌐 Bing Maps</option>
-              <option value="google-search">🔍 Google Search</option>
-              <option value="justdial">📞 JustDial</option>
+              <option value="google-maps">🗺️ Google Maps & OSM</option>
+              <option value="google-search">🔍 Google Crawler</option>
+              <option value="wbrera">🏗️ WB RERA</option>
+              <option value="facebook-leads">📱 Facebook</option>
               <option value="indiamart">🏭 IndiaMart</option>
-              <option value="wbrera">🏗️ WBRERA</option>
+              <option value="99acres">🏠 99acres</option>
               <option value="manual">✏️ Manual</option>
             </select>
             <select class="form-select" id="filter-status" onchange="loadLeads()">
@@ -350,16 +389,16 @@
         <section class="page-section" id="page-map">
           <div class="glass-card">
             <div class="glass-card-header">
-              <h3 class="glass-card-title">🗺️ Lead Locations — Kolkata / Howrah / West Bengal</h3>
+              <h3 class="glass-card-title">🗺️ Construction Radar Map — West Bengal</h3>
               <div>
                 <select class="form-select" id="map-filter-category" onchange="updateMapMarkers()" style="width: auto; display: inline-block;">
-                  <option value="">All Categories</option>
+                  <option value="">All Projects</option>
                   <option value="flat-apartment">🏢 Flats</option>
                   <option value="housing">🏠 Housing</option>
                   <option value="industry">🏭 Industry</option>
                   <option value="office">🏪 Office</option>
-                  <option value="electrician-seeker">🔌 Electricians</option>
-                  <option value="electrical-company">🤝 Companies</option>
+                  <option value="developer-builder">👷 Developers</option>
+                  <option value="individual-house">🏡 Bungalows</option>
                 </select>
               </div>
             </div>
@@ -367,15 +406,15 @@
               <div id="map" style="width: 100%; height: 100%; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
                 <div class="empty-state">
                   <div class="empty-state-icon">🗺️</div>
-                  <div class="empty-state-title">Map View</div>
+                  <div class="empty-state-title">Interactive Map Loading...</div>
                   <div class="empty-state-desc">
-                    Add your Google Maps API key in the .env file to enable the interactive map.<br>
-                    Leads will be shown as markers on the map with detailed info windows.
+                    Leaflet map with satellite view & construction markers will load here.<br>
+                    Click "Search & Generate" first to discover projects, then view them here.
                   </div>
                 </div>
               </div>
               <div class="map-stats" id="map-stats">
-                <strong id="map-lead-count">0</strong> leads shown on map
+                <strong id="map-lead-count">0</strong> construction projects on map
               </div>
             </div>
           </div>
@@ -462,8 +501,8 @@
                   <option value="housing">🏠 Housing</option>
                   <option value="industry">🏭 Industry</option>
                   <option value="office">🏪 Office</option>
-                  <option value="electrician-seeker">🔌 Electrician Seekers</option>
-                  <option value="electrical-company">🤝 Electrical Companies</option>
+                  <option value="developer-builder">👷 Developers</option>
+                  <option value="individual-house">🏡 Bungalows</option>
                 </select>
               </div>
 
@@ -535,8 +574,8 @@
               <option value="housing">🏠 Housing Project</option>
               <option value="industry">🏭 Industry</option>
               <option value="office">🏪 Office</option>
-              <option value="electrician-seeker">🔌 Electrician Seeker</option>
-              <option value="electrical-company">🤝 Electrical Company</option>
+              <option value="developer-builder">👷 Developer / Builder</option>
+              <option value="individual-house">🏡 Bungalow / Private House</option>
             </select>
           </div>
         </div>

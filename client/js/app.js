@@ -12,25 +12,24 @@ let sortDir = 'desc';
 let selectedLeads = new Set();
 
 const CATEGORY_META = {
-  'flat-apartment': { icon: '🏢', label: 'Flats / Apartments', color: '#6366f1' },
-  'housing': { icon: '🏠', label: 'Housing Projects', color: '#059669' },
-  'industry': { icon: '🏭', label: 'New Industries', color: '#d97706' },
-  'office': { icon: '🏪', label: 'New Offices', color: '#7c3aed' },
-  'electrician-seeker': { icon: '🔌', label: 'Electrician Seekers', color: '#dc2626' },
-  'electrical-company': { icon: '🤝', label: 'Electrical Companies', color: '#0891b2' },
+  'flat-apartment': { icon: '🏢', label: 'Under-Construction Flats', color: '#6366f1' },
+  'housing': { icon: '🏠', label: 'Housing Townships', color: '#059669' },
+  'industry': { icon: '🏭', label: 'Factories & Plants', color: '#d97706' },
+  'office': { icon: '🏪', label: 'Commercial / IT Parks', color: '#7c3aed' },
+  'developer-builder': { icon: '👷', label: 'Developers & Promoters', color: '#0891b2' },
+  'individual-house': { icon: '🏡', label: 'Bungalows & Houses', color: '#dc2626' },
   'general': { icon: '📋', label: 'General', color: '#64748b' }
 };
 
 const SOURCE_META = {
-  'google-maps': { icon: '🗺️', label: 'Google Maps' },
-  'google-search': { icon: '🔍', label: 'Google Search' },
-  'bing-maps': { icon: '🌐', label: 'Bing Maps' },
-  'justdial': { icon: '📞', label: 'JustDial' },
-  'indiamart': { icon: '🏭', label: 'IndiaMart' },
-  'wbrera': { icon: '🏗️', label: 'WBRERA' },
-  '99acres': { icon: '🏠', label: '99acres' },
-  'manual': { icon: '✏️', label: 'Manual' },
-  'demo': { icon: '🎯', label: 'Demo' }
+  'google-maps': { icon: '🗺️', label: 'Google Maps & OSM' },
+  'google-search': { icon: '🔍', label: 'Google Web Crawler' },
+  'wbrera': { icon: '🏗️', label: 'WB RERA Registry' },
+  'facebook-leads': { icon: '📱', label: 'Facebook & Social' },
+  'indiamart': { icon: '🏭', label: 'IndiaMart B2B' },
+  '99acres': { icon: '🏠', label: '99acres & MagicBricks' },
+  'manual': { icon: '✏️', label: 'Manual / Field Visit' },
+  'demo': { icon: '🎯', label: 'Project Database' }
 };
 
 const STATUS_META = {
@@ -530,10 +529,11 @@ function toggleSearchSource(id) {
 async function startSearch() {
   const query = document.getElementById('search-query').value.trim();
   const category = document.getElementById('search-category').value;
+  const location = document.getElementById('search-location').value.trim();
   const radius = parseInt(document.getElementById('search-radius').value);
 
-  if (!query) {
-    showToast('Please enter a search query', 'warning');
+  if (!query && !category) {
+    showToast('Please enter a search keyword or select a category', 'warning');
     document.getElementById('search-query').focus();
     return;
   }
@@ -553,29 +553,29 @@ async function startSearch() {
 
   progressEl.classList.add('active');
   searchBtn.disabled = true;
-  searchBtn.innerHTML = '<span class="loading-spinner"></span> Searching...';
+  searchBtn.innerHTML = '<span class="loading-spinner"></span> Scanning Construction Sites...';
 
   // Animate progress
   let progress = 0;
   const progressInterval = setInterval(() => {
-    progress = Math.min(progress + Math.random() * 15, 85);
+    progress = Math.min(progress + Math.random() * 18, 88);
     progressFill.style.width = `${progress}%`;
     progressPercent.textContent = `${Math.round(progress)}%`;
-    progressLabel.textContent = `Searching ${enabledSources.length} sources for "${query}"...`;
-  }, 500);
+    progressLabel.textContent = `Scanning ${location || 'Howrah'} for construction projects...`;
+  }, 400);
 
   try {
-    const result = await api.searchAll(query, category, null, null, radius, enabledSources);
+    const result = await api.searchAll(query, category, null, null, radius, enabledSources, location);
 
     clearInterval(progressInterval);
     progressFill.style.width = '100%';
     progressPercent.textContent = '100%';
-    progressLabel.textContent = 'Search complete!';
+    progressLabel.textContent = 'Extraction complete!';
 
     if (result.success) {
       const data = result.data;
       showSearchResults(data);
-      showToast(`Found ${data.totalFound} leads, saved ${data.totalSaved} new leads!`, 'success');
+      showToast(`Discovered ${data.totalFound} sites (${data.totalSaved} new saved)!`, 'success');
       loadDashboard();
     } else {
       showToast(result.error || 'Search failed', 'error');
@@ -586,11 +586,11 @@ async function startSearch() {
   }
 
   searchBtn.disabled = false;
-  searchBtn.innerHTML = '🔍 Start Lead Search';
+  searchBtn.innerHTML = '⚡ Start Live Lead Extraction';
 
   setTimeout(() => {
     progressEl.classList.remove('active');
-  }, 3000);
+  }, 3500);
 }
 
 function showSearchResults(data) {
@@ -599,22 +599,56 @@ function showSearchResults(data) {
 
   resultsEl.classList.add('active');
 
+  if (data.center) {
+    window._activeSearchCenter = data.center;
+  }
+
+  const centerName = data.center?.name || document.getElementById('search-location')?.value || 'Howrah Area';
+  const radiusKm = ((data.center?.radius || 5000) / 1000).toFixed(0);
+
   let html = `
+    <div style="background: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.25); border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-lg); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <div style="font-size: 0.8rem; color: var(--accent-blue); font-weight: 700; text-transform: uppercase;">
+          📍 Micro-Locality Radar Target
+        </div>
+        <div style="font-weight: 700; color: #fff; font-size: 1.05rem; margin-top: 2px;">
+          ${escapeHtml(centerName)}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+          Radius: <strong>${radiusKm} km</strong> ${data.center ? `| GPS: ${data.center.lat.toFixed(4)}, ${data.center.lng.toFixed(4)}` : ''}
+        </div>
+      </div>
+      <button class="btn btn-sm" style="background: var(--accent-blue); color: #000; font-weight: 700;" onclick="viewRadarMap()">
+        🗺️ View Live Radar Map ➔
+      </button>
+    </div>
+
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); margin-bottom: var(--space-lg);">
       <div class="stat-card" style="--card-accent: var(--accent-blue);">
         <div class="stat-value" style="font-size: 1.5rem;">${data.totalFound}</div>
-        <div class="stat-label">Total Found</div>
+        <div class="stat-label">Sites Discovered</div>
       </div>
       <div class="stat-card" style="--card-accent: var(--accent-green);">
         <div class="stat-value" style="font-size: 1.5rem; color: var(--accent-green);">${data.totalSaved}</div>
-        <div class="stat-label">New Saved</div>
+        <div class="stat-label">New Projects Saved</div>
       </div>
       <div class="stat-card" style="--card-accent: var(--accent-orange);">
         <div class="stat-value" style="font-size: 1.5rem; color: var(--accent-orange);">${data.totalDuplicates || 0}</div>
-        <div class="stat-label">Duplicates Skipped</div>
+        <div class="stat-label">Duplicates Filtered</div>
       </div>
     </div>
-    <h4 style="margin-bottom: var(--space-md); color: var(--text-secondary);">Results by Source</h4>
+
+    <div style="display: flex; gap: var(--space-md); justify-content: center; margin: var(--space-md) 0 var(--space-lg); flex-wrap: wrap;">
+      <button class="btn btn-primary btn-lg" onclick="navigateTo('leads')">
+        📋 View All Projects in CRM Table ➔
+      </button>
+      <button class="btn btn-lg" style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue);" onclick="viewRadarMap()">
+        🗺️ Zoom Into Interactive Map
+      </button>
+    </div>
+
+    <h4 style="margin-bottom: var(--space-md); color: var(--text-secondary);">Harvest Breakdown by Engine</h4>
   `;
 
   if (data.sourceResults) {
@@ -643,207 +677,197 @@ function showSearchResults(data) {
   resultsBody.innerHTML = html;
 }
 
+function viewRadarMap() {
+  navigateTo('map');
+  if (window._activeSearchCenter && window._leafletMap) {
+    setTimeout(() => {
+      focusMapOnLocality(window._activeSearchCenter.lat, window._activeSearchCenter.lng, window._activeSearchCenter.radius || 5000, window._activeSearchCenter.name);
+    }, 500);
+  }
+}
+
+function selectDistrict(district) {
+  document.getElementById('search-location').value = district + ', West Bengal';
+}
+
 function quickSearch(query) {
   document.getElementById('search-query').value = query;
   document.getElementById('search-query').focus();
 
-  // Auto-detect category
   const q = query.toLowerCase();
   let cat = '';
   if (/apartment|flat/.test(q)) cat = 'flat-apartment';
-  else if (/housing|villa/.test(q)) cat = 'housing';
-  else if (/factory|industrial/.test(q)) cat = 'industry';
-  else if (/office/.test(q)) cat = 'office';
-  else if (/electrician/.test(q)) cat = 'electrician-seeker';
-  else if (/electrical.*company|switchgear/.test(q)) cat = 'electrical-company';
+  else if (/housing|villa|township/.test(q)) cat = 'housing';
+  else if (/factory|industrial|manufacturing/.test(q)) cat = 'industry';
+  else if (/office|commercial/.test(q)) cat = 'office';
+  else if (/bungalow|private house/.test(q)) cat = 'individual-house';
+  else if (/developer|builder|promoter/.test(q)) cat = 'developer-builder';
 
   if (cat) document.getElementById('search-category').value = cat;
 }
 
-// ==================== DEMO DATA ====================
-async function loadDemoData() {
-  try {
-    const result = await api.loadDemo();
-    if (result.success) {
-      showToast(`Demo data loaded! ${result.data.inserted} leads inserted, ${result.data.duplicates} duplicates skipped.`, 'success');
-      loadDashboard();
-      if (currentPage === 'leads') loadLeads();
-    } else {
-      showToast(result.error || 'Failed to load demo data', 'error');
-    }
-  } catch (error) {
-    showToast('Failed to load demo data', 'error');
+// ==================== GPS LIVE LOCATOR ====================
+function useCurrentGpsLocation() {
+  if (!navigator.geolocation) {
+    showToast('Geolocation is not supported by your browser', 'warning');
+    return;
   }
+  showToast('Detecting your live GPS coordinates...', 'info');
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      document.getElementById('search-location').value = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      window._activeSearchCenter = { lat, lng, name: `Your Current Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`, radius: 5000 };
+      showToast(`GPS Position Acquired: ${lat.toFixed(4)}, ${lng.toFixed(4)}`, 'success');
+      if (window._leafletMap) {
+        focusMapOnLocality(lat, lng, 5000, 'Your GPS Position');
+      }
+    },
+    () => {
+      showToast('Could not access GPS. Enter village/town name manually.', 'warning');
+    },
+    { enableHighAccuracy: true, timeout: 8000 }
+  );
 }
 
-// ==================== ADD LEAD ====================
-function openAddLeadModal() {
-  openModal('add-lead-modal');
-  document.getElementById('add-lead-form').reset();
-  document.getElementById('new-lead-city').value = 'Howrah';
-  document.getElementById('new-lead-state').value = 'West Bengal';
-}
+function focusMapOnLocality(lat, lng, radius, label) {
+  if (!window._leafletMap) return;
+  window._leafletMap.flyTo([lat, lng], 14, { animate: true, duration: 1.5 });
 
-async function submitNewLead(event) {
-  event.preventDefault();
-
-  const data = {
-    name: document.getElementById('new-lead-name').value,
-    phone: document.getElementById('new-lead-phone').value,
-    email: document.getElementById('new-lead-email').value,
-    category: document.getElementById('new-lead-category').value,
-    address: document.getElementById('new-lead-address').value,
-    city: document.getElementById('new-lead-city').value,
-    state: document.getElementById('new-lead-state').value,
-    pincode: document.getElementById('new-lead-pincode').value,
-    notes: document.getElementById('new-lead-notes').value
-  };
-
-  try {
-    const result = await api.createLead(data);
-    if (result.success) {
-      showToast('Lead added successfully!', 'success');
-      closeModal('add-lead-modal');
-      loadDashboard();
-      if (currentPage === 'leads') loadLeads();
-    } else {
-      showToast(result.error || 'Failed to add lead', 'error');
-    }
-  } catch (error) {
-    showToast('Failed to add lead', 'error');
+  if (window._searchRadarCircle) {
+    window._leafletMap.removeLayer(window._searchRadarCircle);
   }
+
+  window._searchRadarCircle = L.circle([lat, lng], {
+    radius: radius || 5000,
+    color: '#00D4FF',
+    fillColor: '#00D4FF',
+    fillOpacity: 0.12,
+    weight: 2,
+    dashArray: '6, 6'
+  }).addTo(window._leafletMap);
+
+  window._searchRadarCircle.bindPopup(`<b>📍 Search Radar:</b><br>${escapeHtml(label || 'Target Area')}<br>Radius: ${(radius/1000).toFixed(1)} km`);
 }
 
-// ==================== SOURCES PAGE ====================
-async function loadSourcesPage() {
-  try {
-    const result = await api.getSources();
-    if (!result.success) return;
-
-    const container = document.getElementById('sources-list');
-    container.innerHTML = result.data.map(source => `
-      <div class="source-toggle ${source.enabled ? 'active' : ''}" style="margin-bottom: var(--space-md);"
-           onclick="toggleSourceSetting('${source.id}', this)">
-        <div class="source-toggle-icon" style="font-size: 1.5rem;">${source.icon || '📋'}</div>
-        <div class="source-toggle-info" style="flex: 1;">
-          <div class="source-toggle-name" style="font-size: 1rem;">${escapeHtml(source.name)}</div>
-          <div class="source-toggle-desc" style="white-space: normal; margin-top: 2px;">
-            ${escapeHtml(source.description || '')}
-          </div>
-          <div style="font-size: 0.7rem; margin-top: 4px; color: var(--text-muted);">
-            Type: ${source.type} · Leads: ${source.total_leads || 0}
-            ${source.api_key_required ? (source.api_key_configured ? ' · 🔑 Key configured' : ' · ⚠️ Key needed') : ''}
-            ${source.last_used ? ` · Last used: ${new Date(source.last_used).toLocaleDateString()}` : ''}
-          </div>
-        </div>
-        <div class="source-toggle-switch"></div>
-      </div>
-    `).join('');
-
-    // Load search history
-    const historyRes = await api.getSearchHistory();
-    if (historyRes.success && historyRes.data.length > 0) {
-      const historyContainer = document.getElementById('search-history-list');
-      historyContainer.innerHTML = historyRes.data.map(item => `
-        <div class="results-source-item">
-          <div>
-            <div style="font-weight: 600;">${escapeHtml(item.query)}</div>
-            <div style="font-size: 0.7rem; color: var(--text-muted);">
-              ${item.category || 'All'} · ${item.sources || 'All sources'} · ${new Date(item.created_at).toLocaleString()}
-            </div>
-          </div>
-          <div>
-            <span class="badge" style="background: var(--accent-green-dim); color: var(--accent-green);">
-              ${item.results_count} results
-            </span>
-          </div>
-        </div>
-      `).join('');
-    }
-  } catch (error) {
-    console.error('Load sources error:', error);
-  }
+function openLiveGoogleMapsSearch() {
+  const query = document.getElementById('search-query')?.value.trim() || 'under construction apartment';
+  const location = document.getElementById('search-location')?.value.trim() || 'Sankrail, Howrah';
+  const url = `https://www.google.com/maps/search/${encodeURIComponent(query + ' in ' + location)}`;
+  window.open(url, '_blank');
+  showToast('Opened Google Maps Live Search', 'info');
 }
 
-async function toggleSourceSetting(id, element) {
-  const isActive = element.classList.toggle('active');
-  try {
-    await api.toggleSource(id, isActive);
-    showToast(`Source ${isActive ? 'enabled' : 'disabled'}`, 'info');
-  } catch (error) {
-    element.classList.toggle('active');
-    showToast('Failed to update source', 'error');
-  }
-}
+// ==================== MAP (LEAFLET) ====================
+let leafletMarkersLayer = null;
 
-// ==================== SOURCES (for sidebar) ====================
-async function loadSources() {
-  try {
-    const result = await api.getSources();
-    if (result.success) {
-      allSources = result.data;
-    }
-  } catch (error) {
-    console.error('Load sources error:', error);
-  }
-}
-
-// ==================== MAP ====================
 async function loadMapData() {
-  try {
-    const result = await api.getLeads({ limit: 500 });
-    if (!result.success) return;
+  // Initialize Leaflet map if not yet done
+  if (!window._leafletMap) {
+    const mapEl = document.getElementById('map');
+    if (!mapEl) return;
 
-    const leads = result.data.filter(l => l.lat && l.lng);
-    document.getElementById('map-lead-count').textContent = leads.length;
+    // Load Leaflet CSS/JS dynamically
+    if (!window.L) {
+      const cssLink = document.createElement('link');
+      cssLink.rel = 'stylesheet';
+      cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(cssLink);
 
-    // If Google Maps is available, render map
-    if (window.google && window.google.maps) {
-      renderGoogleMap(leads);
-    } else {
-      // Show a nice fallback with lead positions listed
-      renderMapFallback(leads);
+      await new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = resolve;
+        document.head.appendChild(script);
+      });
     }
-  } catch (error) {
-    console.error('Map load error:', error);
+
+    mapEl.innerHTML = '';
+    window._leafletMap = L.map(mapEl).setView([22.5694, 88.2435], 12);
+
+    // Street map layer
+    const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19
+    });
+
+    // Satellite layer
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '© Esri',
+      maxZoom: 18
+    });
+
+    streetLayer.addTo(window._leafletMap);
+    L.control.layers({ '🗺️ Street Map': streetLayer, '🛰️ Satellite View': satelliteLayer }).addTo(window._leafletMap);
+
+    leafletMarkersLayer = L.layerGroup().addTo(window._leafletMap);
   }
+
+  // Render lead markers
+  await renderMapWithLeads();
 }
 
-function renderMapFallback(leads) {
-  const mapEl = document.getElementById('map');
-  if (leads.length === 0) return;
+async function renderMapWithLeads() {
+  if (!window._leafletMap || !leafletMarkersLayer) return;
 
-  mapEl.innerHTML = `
-    <div style="width: 100%; height: 100%; overflow-y: auto; padding: var(--space-lg);">
-      <div style="text-align: center; margin-bottom: var(--space-lg);">
-        <div style="font-size: 2rem;">🗺️</div>
-        <h3 style="color: var(--text-secondary); margin: var(--space-sm) 0;">Map View — ${leads.length} leads with coordinates</h3>
-        <p style="font-size: 0.8rem; color: var(--text-muted);">Add Google Maps API key to .env for interactive map. Showing lead locations below.</p>
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md);">
-        ${leads.slice(0, 50).map(lead => {
-          const catMeta = CATEGORY_META[lead.category] || CATEGORY_META['general'];
-          return `
-            <div class="glass-card" style="margin: 0; padding: var(--space-md);">
-              <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm);">
-                <span>${catMeta.icon}</span>
-                <strong style="font-size: 0.85rem;">${escapeHtml(lead.name)}</strong>
-              </div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">
-                📍 ${lead.address || lead.city || 'Unknown'}<br>
-                🌐 ${lead.lat?.toFixed(4)}, ${lead.lng?.toFixed(4)}
-                ${lead.phone ? `<br>📞 ${lead.phone}` : ''}
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
-  `;
+  leafletMarkersLayer.clearLayers();
+  const catFilter = document.getElementById('map-filter-category')?.value || '';
+
+  try {
+    const res = await api.getLeads({ limit: 500, category: catFilter });
+    if (!res.success) return;
+
+    const leadsWithCoords = res.data.filter(l => l.lat && l.lng);
+    const countEl = document.getElementById('map-lead-count');
+    if (countEl) countEl.textContent = leadsWithCoords.length;
+
+    const bounds = [];
+
+    leadsWithCoords.forEach(lead => {
+      const lat = parseFloat(lead.lat);
+      const lng = parseFloat(lead.lng);
+      if (isNaN(lat) || isNaN(lng)) return;
+
+      const catMeta = CATEGORY_META[lead.category] || CATEGORY_META['general'];
+
+      const customIcon = L.divIcon({
+        className: 'custom-map-div-icon',
+        html: `<div style="background:${catMeta.color};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.4);border:2px solid #fff;">${catMeta.icon}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -16]
+      });
+
+      const popupContent = `
+        <div style="min-width:200px;font-family:system-ui;">
+          <div style="font-size:0.7rem;color:${catMeta.color};font-weight:700;text-transform:uppercase;">${catMeta.icon} ${catMeta.label}</div>
+          <strong style="font-size:0.9rem;display:block;margin:4px 0;">${escapeHtml(lead.name)}</strong>
+          ${lead.company_name && lead.company_name !== lead.name ? `<div style="font-size:0.75rem;color:#666;">${escapeHtml(lead.company_name)}</div>` : ''}
+          <div style="font-size:0.75rem;color:#888;margin:4px 0;">📍 ${escapeHtml(lead.address || lead.city || 'West Bengal')}</div>
+          ${lead.project_stage ? `<div style="font-size:0.7rem;margin:2px 0;"><span style="background:#4F46E5;color:#fff;padding:1px 6px;border-radius:4px;">${escapeHtml(lead.project_stage)}</span></div>` : ''}
+          <div style="display:flex;gap:4px;margin-top:6px;">
+            ${lead.phone ? `<a href="tel:${lead.phone}" style="background:#059669;color:#fff;padding:2px 8px;border-radius:4px;text-decoration:none;font-size:0.7rem;">📞 ${lead.phone}</a>` : ''}
+            ${lead.phone ? `<a href="https://wa.me/91${lead.phone}?text=${encodeURIComponent('Hello, I am from AmpEdge Electrical Solutions.')}" target="_blank" style="background:#25D366;color:#fff;padding:2px 8px;border-radius:4px;text-decoration:none;font-size:0.7rem;">💬 WhatsApp</a>` : ''}
+          </div>
+        </div>
+      `;
+
+      const marker = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
+      leafletMarkersLayer.addLayer(marker);
+      bounds.push([lat, lng]);
+    });
+
+    if (bounds.length > 0) {
+      window._leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+    }
+  } catch (err) {
+    console.error('Render map error:', err);
+  }
 }
 
 function updateMapMarkers() {
-  loadMapData();
+  renderMapWithLeads();
 }
 
 // ==================== EXPORT ====================

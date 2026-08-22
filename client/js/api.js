@@ -61,29 +61,16 @@ const api = {
   },
 
   // ==================== SEARCH ====================
-  async searchGoogleMaps(query, category, lat, lng, radius) {
-    const res = await fetch(`${API_BASE}/search/google-maps`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, category, lat, lng, radius })
-    });
+  async geocode(location) {
+    const res = await fetch(`${API_BASE}/search/geocode?location=${encodeURIComponent(location || 'Howrah')}`);
     return res.json();
   },
 
-  async searchBing(query, category, lat, lng) {
-    const res = await fetch(`${API_BASE}/search/bing`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, category, lat, lng })
-    });
-    return res.json();
-  },
-
-  async searchAll(query, category, lat, lng, radius, sources) {
+  async searchAll(query, category, lat, lng, radius, sources, location) {
     const res = await fetch(`${API_BASE}/search/all`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, category, lat, lng, radius, sources })
+      body: JSON.stringify({ query, category, lat, lng, radius, sources, location })
     });
     return res.json();
   },

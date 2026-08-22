@@ -48,7 +48,7 @@ async function setupDatabase() {
   await initSQL();
   const db = getDb();
 
-  // Create leads table
+  // Create leads table with construction project fields
   db.run(`
     CREATE TABLE IF NOT EXISTS leads (
       id TEXT PRIMARY KEY,
@@ -64,17 +64,37 @@ async function setupDatabase() {
       lng REAL,
       category TEXT NOT NULL,
       subcategory TEXT,
+      project_stage TEXT DEFAULT '',
+      project_scale TEXT DEFAULT '',
       source TEXT NOT NULL,
       source_url TEXT,
       status TEXT DEFAULT 'new',
       rating REAL,
       website TEXT,
+      google_business_url TEXT DEFAULT '',
+      facebook_url TEXT DEFAULT '',
       notes TEXT,
       raw_data TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // Migrate existing tables — add new columns if missing
+  const migrationCols = [
+    { name: 'project_stage', sql: "ALTER TABLE leads ADD COLUMN project_stage TEXT DEFAULT ''" },
+    { name: 'project_scale', sql: "ALTER TABLE leads ADD COLUMN project_scale TEXT DEFAULT ''" },
+    { name: 'google_business_url', sql: "ALTER TABLE leads ADD COLUMN google_business_url TEXT DEFAULT ''" },
+    { name: 'facebook_url', sql: "ALTER TABLE leads ADD COLUMN facebook_url TEXT DEFAULT ''" }
+  ];
+
+  for (const col of migrationCols) {
+    try {
+      db.run(col.sql);
+    } catch (e) {
+      // Column already exists
+    }
+  }
 
   // Create sources table
   db.run(`
@@ -126,39 +146,39 @@ async function setupDatabase() {
   db.run(`CREATE INDEX IF NOT EXISTS idx_leads_city ON leads(city);`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at);`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads(phone);`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_leads_project_stage ON leads(project_stage);`);
 
-  // Insert default sources
+  // Insert default sources — construction focused
   const defaultSources = [
-    ['google-maps', 'Google Maps / Places', 'api', '🗺️', 1, 1, 'Search nearby businesses, construction sites, and services via Google Places API'],
-    ['google-search', 'Google Web Search', 'api', '🔍', 1, 1, 'Search the web for new projects, companies, and contacts'],
-    ['bing-maps', 'Bing Maps', 'api', '🌐', 1, 1, 'Microsoft Bing local search for businesses and services'],
-    ['justdial', 'JustDial', 'scraper', '📞', 1, 0, 'India\'s largest local search engine for businesses'],
-    ['indiamart', 'IndiaMart', 'scraper', '🏭', 1, 0, 'India\'s largest B2B marketplace for industrial products'],
-    ['wbrera', 'WBRERA Portal', 'scraper', '🏗️', 1, 0, 'West Bengal Real Estate Regulatory Authority — registered projects'],
-    ['99acres', '99acres', 'scraper', '🏠', 1, 0, 'Real estate portal for new projects and properties'],
-    ['manual', 'Manual Entry', 'manual', '✏️', 1, 0, 'Manually added leads']
+    ['google-maps', 'Google Maps & OSM Overpass', 'api', '🗺️', 1, 0, 'Live OpenStreetMap building scanner + Google Maps Places for construction sites'],
+    ['google-search', 'Google Web Search & Crawler', 'api', '🔍', 1, 0, 'Web search for new construction projects, builders, and promoters'],
+    ['wbrera', 'WB RERA & Construction Registry', 'scraper', '🏗️', 1, 0, 'West Bengal Real Estate Regulatory Authority — registered construction projects'],
+    ['facebook-leads', 'Facebook & Social Media', 'scraper', '📱', 1, 0, 'Facebook/social media project launch and builder announcements'],
+    ['indiamart', 'IndiaMart Industrial B2B', 'scraper', '🏭', 1, 0, 'Industrial project listings, factory construction, and equipment suppliers'],
+    ['99acres', '99acres & MagicBricks', 'scraper', '🏠', 1, 0, 'Real estate portals for under-construction flats and housing projects'],
+    ['manual', 'Manual Entry & Field Visit', 'manual', '✏️', 1, 0, 'Manually added leads from field visits and personal contacts']
   ];
 
   for (const source of defaultSources) {
     db.run(
-      `INSERT OR IGNORE INTO sources (id, name, type, icon, enabled, api_key_required, description) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO sources (id, name, type, icon, enabled, api_key_required, description) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       source
     );
   }
 
-  // Insert default categories
+  // Insert construction-focused categories (NO electricians/retail)
   const defaultCategories = [
-    ['flat-apartment', 'New Flats / Apartments', '🏢', 'new apartment,flat,residential complex,housing society,builder flat,new construction flat', 'New residential flat and apartment projects', '#4F46E5'],
-    ['housing', 'Housing Projects', '🏠', 'housing project,residential project,township,villa,independent house,row house', 'New housing and township projects', '#059669'],
-    ['industry', 'New Industries', '🏭', 'factory,manufacturing,industrial,warehouse,godown,plant,workshop', 'New industrial setups and factories', '#D97706'],
-    ['office', 'New Offices', '🏪', 'office space,commercial,IT park,business center,co-working,corporate office', 'New office and commercial spaces', '#7C3AED'],
-    ['electrician-seeker', 'Electrician Seekers', '🔌', 'electrician,electrical work,wiring,electrical repair,electrical installation', 'People or businesses looking for electrician services', '#DC2626'],
-    ['electrical-company', 'Electrical Companies', '🤝', 'electrical company,electrical contractor,electrical supplier,switchgear,cable,transformer', 'Electrical companies for collaboration/partnership', '#0891B2']
+    ['flat-apartment', 'Under-Construction Flats & High-Rises', '🏢', 'new apartment,flat,residential complex,housing society,builder flat,new construction flat,high-rise,tower', 'New residential flat and apartment construction projects', '#4F46E5'],
+    ['housing', 'Housing Townships & Gated Communities', '🏠', 'housing project,residential project,township,villa,duplex,gated community,row house,independent house', 'New housing township and gated community projects', '#059669'],
+    ['industry', 'New Factories & Industrial Plants', '🏭', 'factory,manufacturing,industrial,warehouse,godown,plant,workshop,steel,chemical,logistics,shed', 'New industrial setups, factories, and logistics parks', '#D97706'],
+    ['office', 'Commercial Buildings & IT Parks', '🏪', 'office space,commercial,IT park,business center,co-working,corporate office,mall,shopping,SEZ', 'New office buildings, IT parks, and commercial complexes', '#7C3AED'],
+    ['developer-builder', 'Real Estate Developers & Promoters', '👷', 'developer,builder,promoter,real estate,construction company,contractor', 'Real estate developers, builders, and promoters for collaboration', '#0891B2'],
+    ['individual-house', 'Bungalows & Private Houses', '🏡', 'bungalow,private house,individual house,mansion,luxury home,farmhouse', 'Individual house, bungalow, and luxury home construction', '#DC2626']
   ];
 
   for (const cat of defaultCategories) {
     db.run(
-      `INSERT OR IGNORE INTO categories (id, name, icon, keywords, description, color) VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO categories (id, name, icon, keywords, description, color) VALUES (?, ?, ?, ?, ?, ?)`,
       cat
     );
   }

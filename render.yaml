@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ampedge-lead-generator
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server/index.js
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+      - key: DEFAULT_LAT
+        value: 22.5726
+      - key: DEFAULT_LNG
+        value: 88.3639
+      - key: DEFAULT_RADIUS
+        value: 50000
+      - key: DEFAULT_REGION
+        value: West Bengal
